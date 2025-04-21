@@ -5,7 +5,7 @@ To generate docs use:
 swag init
 ```
 
-# TODO:
+# Required items:
 1. [X] Create endpoint to handle simple CRUD requests
    - [X] Choose the right framework to implement (Used `gin`, although `chia` also can be used)
    - [X] Define project structure
@@ -15,10 +15,18 @@ swag init
    - [X] Choose the right library (`pgx` with `squirrel` can be used)
    - [ ] Implement functionality
    - [ ] Add database migration
-3. [ ] Test it automatically
+3. [ ] Setup logging
+   - [ ] Choose library for logging or understand how to implement it
+4. [ ] Test it automatically
    - [ ] Add unit tests
    - [ ] Add integration tests
-4. [ ] Infrastructure setup
+5. [ ] Infrastructure setup
    - [ ] Put application in Docker
    - [ ] Create `docker-compose.yaml` file for deployment
    - [ ] Create CI/CD pipeline and push to GitHub repository
+
+# Optional items:
+1. [ ] Explore swagger alternatives
+   - [ ] Explore [huma](https://github.com/danielgtaylor/huma) or [humagin](https://pkg.go.dev/github.com/danielgtaylor/huma/v2/adapters/humagin)
+2. [ ] Explore different web frameworks
+   - [ ] Explore chi
