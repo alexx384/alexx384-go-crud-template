@@ -1,42 +1,32 @@
 package main
 
 import (
-	"crud/controller"
-	"crud/docs"
+	"crud/internal"
+	"crud/internal/config"
+	"crud/internal/config/database"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	swaggerfiles "github.com/swaggo/files" // swagger embed files
-	ginSwagger "github.com/swaggo/gin-swagger"
+	"os"
 )
 
-// @title					 User Template Service
-// @version					 1.0
-// @description				 This is sample server template
-// @termsOfService			 http://swagger.io/terms/
-
-// @contact.name			 API Support
-// @contact.url				 http://www.swagger.io/support
-// @contact.email			 support@swagger.io
-
-// @license.name			 Apache 2.0
-// @license.url				 http://www.apache.org/licenses/LICENSE-2.0.html
-
-// @host					 localhost:8080
-// @BasePath				 /api/v1
-// @schemes					 http https
-
-// @externalDocs.description OpenAPI Swag Go
-// @externalDocs.url         https://github.com/swaggo/swag#general-api-info
 func main() {
+	appConfig, err := config.LoadConfig()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error loading config: %v\n", err)
+		os.Exit(1)
+	}
+
+	dbPool, err := database.NewPool(appConfig.DB)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error connecting to database: %v\n", err)
+		os.Exit(1)
+	}
+	defer dbPool.Close()
+
 	app := gin.Default()
-	router := app.Group("/api/v1")
-	controller.UserRoutes(router)
+	internal.SetupRouter(dbPool, app)
 
-	docs.SwaggerInfo.Title = "Swagger Example API"
-	docs.SwaggerInfo.BasePath = "/api/v1"
-	app.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
-
-	err := app.Run(":8080")
+	err = app.Run(":8080")
 	if err != nil {
 		fmt.Println("Something went wrong")
 		return

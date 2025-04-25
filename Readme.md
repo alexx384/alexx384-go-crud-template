@@ -5,6 +5,11 @@ To generate docs use:
 swag init
 ```
 
+Starting Postgres:
+```shell
+docker run --name postgres -e POSTGRES_PASSWORD=password -d -p 5432:5432 postgres:17-alpine
+```
+
 # Required items:
 1. [X] Create endpoint to handle simple CRUD requests
    - [X] Choose the right framework to implement (Used `gin`, although `chia` also can be used)
@@ -13,13 +18,14 @@ swag init
    - [X] Add swagger (accessible by path localhost:8080/swagger/index.html )
 2. [ ] Create integration with Postgres database
    - [X] Choose the right library (`pgx` with `squirrel` can be used)
-   - [ ] Implement functionality
+   - [X] Implement functionality
    - [ ] Add database migration
 3. [ ] Setup logging
    - [ ] Choose library for logging or understand how to implement it
 4. [ ] Test it automatically
    - [ ] Add unit tests
    - [ ] Add integration tests
+   - [ ] Add test coverage report
 5. [ ] Infrastructure setup
    - [ ] Put application in Docker
    - [ ] Create `docker-compose.yaml` file for deployment
