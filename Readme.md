@@ -10,6 +10,12 @@ Starting Postgres:
 docker run --name postgres -e POSTGRES_PASSWORD=password -d -p 5432:5432 postgres:17-alpine
 ```
 
+# Build go program
+
+```shell
+go build -trimpath .
+```
+
 # Required items:
 1. [X] Create endpoint to handle simple CRUD requests
    - [X] Choose the right framework to implement (Used `gin`, although `chia` also can be used)
@@ -20,8 +26,8 @@ docker run --name postgres -e POSTGRES_PASSWORD=password -d -p 5432:5432 postgre
    - [X] Choose the right library (`pgx` with `squirrel` can be used)
    - [X] Implement functionality
    - [X] Add database migration
-3. [ ] Setup logging
-   - [ ] Choose library for logging or understand how to implement it
+3. [X] Setup logging
+   - [X] Use slog to implement it (we need to supply module name, timestamp, severity, message)
 4. [ ] Test it automatically
    - [ ] Add unit tests
    - [ ] Add integration tests
@@ -30,6 +36,8 @@ docker run --name postgres -e POSTGRES_PASSWORD=password -d -p 5432:5432 postgre
    - [ ] Put application in Docker
    - [ ] Create `docker-compose.yaml` file for deployment
    - [ ] Create CI/CD pipeline and push to GitHub repository
+   - [ ] Add code linters
+   - [ ] Add logger linters ([vet](https://pkg.go.dev/cmd/vet), [sloglint](https://github.com/go-simpler/sloglint))
 
 # Optional items:
 1. [ ] Explore swagger alternatives

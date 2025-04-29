@@ -1,6 +1,7 @@
 package response
 
 import (
+	"crud/internal/util/log"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"strconv"
@@ -11,6 +12,7 @@ func NewError(ctx *gin.Context, status int, err error) {
 		Code:    status,
 		Message: err.Error(),
 	}
+	log.Warn(ctx, err.Error())
 	ctx.JSON(status, httpError)
 }
 

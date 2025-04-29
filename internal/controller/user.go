@@ -54,7 +54,8 @@ func (controller *UserController) GetUsers(context *gin.Context) {
 		return
 	}
 
-	users, err := controller.userService.GetUsers(offset, limit)
+	ctx := context.Request.Context()
+	users, err := controller.userService.GetUsers(offset, limit, &ctx)
 	if err != nil {
 		responseUtil.NewError(context, http.StatusInternalServerError, err)
 		return
@@ -79,7 +80,8 @@ func (controller *UserController) GetUserById(context *gin.Context) {
 		return
 	}
 
-	user, err := controller.userService.GetById(id)
+	ctx := context.Request.Context()
+	user, err := controller.userService.GetById(id, &ctx)
 	if err != nil {
 		responseUtil.NewError(context, http.StatusNotFound, err)
 		return
@@ -104,7 +106,8 @@ func (controller *UserController) CreateUser(context *gin.Context) {
 		return
 	}
 
-	userResponse, err := controller.userService.Create(&request)
+	ctx := context.Request.Context()
+	userResponse, err := controller.userService.Create(&request, &ctx)
 	if err != nil {
 		responseUtil.NewError(context, http.StatusInternalServerError, err)
 		return
@@ -130,7 +133,8 @@ func (controller *UserController) UpdateUser(context *gin.Context) {
 		return
 	}
 
-	user, err := controller.userService.Update(&updateUserRequest)
+	ctx := context.Request.Context()
+	user, err := controller.userService.Update(&updateUserRequest, &ctx)
 	if err != nil {
 		responseUtil.NewError(context, http.StatusBadRequest, err)
 		return
@@ -155,7 +159,8 @@ func (controller *UserController) DeleteUser(context *gin.Context) {
 		return
 	}
 
-	user, err := controller.userService.Delete(id)
+	ctx := context.Request.Context()
+	user, err := controller.userService.Delete(id, &ctx)
 	if err != nil {
 		responseUtil.NewError(context, http.StatusBadRequest, err)
 		return
