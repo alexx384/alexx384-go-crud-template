@@ -1,10 +1,12 @@
 package server
 
 import (
+	"context"
 	"crud/cmd/app/config"
 	"crud/cmd/app/config/database"
 	"crud/internal"
 	"crud/internal/middleware"
+	"database/sql"
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -18,7 +20,14 @@ import (
 
 func runDbMigration(pool *pgxpool.Pool) error {
 	db := stdlib.OpenDBFromPool(pool)
-	driver, err := postgres.WithInstance(db, &postgres.Config{})
+	conn, err := db.Conn(context.Background())
+	defer func(conn *sql.Conn) {
+		err := conn.Close()
+		if err != nil {
+			slog.Default().Warn("failed to close database connection", slog.String("error", err.Error()))
+		}
+	}(conn)
+	driver, err := postgres.WithConnection(context.Background(), conn, &postgres.Config{})
 	if err != nil {
 		return err
 	}
@@ -28,15 +37,6 @@ func runDbMigration(pool *pgxpool.Pool) error {
 	if err != nil {
 		return err
 	}
-	defer func(m *migrate.Migrate) {
-		sourceErr, databaseError := m.Close()
-		if sourceErr != nil {
-			slog.Default().Warn("Source error during migration:", slog.String("error", sourceErr.Error()))
-		}
-		if databaseError != nil {
-			slog.Default().Warn("Database error during migration:", slog.String("error", databaseError.Error()))
-		}
-	}(m)
 	err = m.Up()
 	if err != nil && !errors.Is(err, migrate.ErrNoChange) {
 		return err

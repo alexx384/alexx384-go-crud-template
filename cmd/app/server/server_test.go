@@ -4,22 +4,19 @@ import (
 	"context"
 	"crud/cmd/app/config"
 	logConfig "crud/cmd/app/config/log"
-	"errors"
+	"crud/internal/model"
+	"encoding/json"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
-	"log"
-	"net/http"
+	"io"
+	"net/http/httptest"
 	"strings"
 	"testing"
 )
 
-const POSTGRES_TEST_PASSWORD = "testpassword"
-
-//func startServer(t *testing.T) (testcontainers.Container, string) {
-//
-//}
+const postgresTestPassword = "testpassword"
 
 func TestIntegrationApp(t *testing.T) {
 	_, logLevel := logConfig.CreateLogger()
@@ -28,7 +25,7 @@ func TestIntegrationApp(t *testing.T) {
 		Image:        "postgres:17-alpine",
 		ExposedPorts: []string{"5432/tcp"},
 		WaitingFor:   wait.ForListeningPort("5432/tcp"),
-		Env:          map[string]string{"POSTGRES_PASSWORD": POSTGRES_TEST_PASSWORD},
+		Env:          map[string]string{"POSTGRES_PASSWORD": postgresTestPassword},
 	}
 	ctx := context.Background()
 	postgres, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
@@ -43,7 +40,7 @@ func TestIntegrationApp(t *testing.T) {
 		Host:     hostAndPort[0],
 		Port:     hostAndPort[1],
 		Username: "postgres",
-		Password: POSTGRES_TEST_PASSWORD,
+		Password: postgresTestPassword,
 		Database: "postgres",
 		Schema:   "public",
 		Params:   "",
@@ -54,19 +51,18 @@ func TestIntegrationApp(t *testing.T) {
 
 	engine, dbPool, err := ConfigureAppEngine(&appConfig, logLevel)
 	assert.NoError(t, err)
-	srv := http.Server{
-		Addr:    ":8080",
-		Handler: engine.Handler(),
-	}
+	server := httptest.NewServer(engine.Handler())
+	client := server.Client()
 
-	go func() {
-		// service connections
-		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Fatalf("listen: %s\n", err)
-		}
-	}()
+	httpResponse, err := client.Get(server.URL + "/api/v1/user/")
+	assert.NoError(t, err)
+	body, err := io.ReadAll(httpResponse.Body)
+	var usersResponse []model.UserResponse
+	err = json.Unmarshal(body, &usersResponse)
+	assert.NoError(t, err)
+	assert.Equal(t, 3, len(usersResponse))
 
-	err = srv.Shutdown(ctx)
+	server.Close()
 	dbPool.Close()
 	testcontainers.CleanupContainer(t, postgres)
 	require.NoError(t, err)
