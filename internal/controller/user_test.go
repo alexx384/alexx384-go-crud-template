@@ -7,14 +7,12 @@ import (
 	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
 	"testing"
 )
-
-const OFFSET = "offset"
-const LIMIT = "limit"
 
 func TestUnitBadRequestGetUsers(t *testing.T) {
 	t.Parallel()
@@ -56,21 +54,21 @@ func TestUnitInternalErrorGetUsers(t *testing.T) {
 	expectedOffset := 1
 	expectedLimit := 1
 	expectedErrorMessage := "some error"
+	url := "/api/v1/user/?offset=" + strconv.Itoa(expectedOffset) + "&limit=" + strconv.Itoa(expectedLimit)
+	router := gin.Default()
+	routerGroup := router.Group("/api/v1")
 
 	testRecorder := httptest.NewRecorder()
-	context, _ := gin.CreateTestContext(testRecorder)
-	context.Request, _ = http.NewRequest(http.MethodGet, "/", nil)
-	context.Params = gin.Params{
-		gin.Param{Key: OFFSET, Value: strconv.Itoa(expectedOffset)},
-		gin.Param{Key: LIMIT, Value: strconv.Itoa(expectedLimit)}}
-	requestContext := context.Request.Context()
+	req, _ := http.NewRequest(http.MethodGet, url, nil)
+
 	mockService := mocks.NewMockIUserService(t)
 	mockService.EXPECT().
-		GetUsers(expectedOffset, expectedLimit, &requestContext).
+		GetUsers(expectedOffset, expectedLimit, mock.Anything).
 		Return(nil, errors.New(expectedErrorMessage))
 
 	controller := NewUserController(mockService)
-	controller.GetUsers(context)
+	controller.SetupRoutes(routerGroup)
+	router.ServeHTTP(testRecorder, req)
 
 	assert.Equal(t, http.StatusInternalServerError, testRecorder.Code)
 	responseBody := testRecorder.Body.String()
