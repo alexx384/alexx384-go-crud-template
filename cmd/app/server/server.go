@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"crud/internal"
@@ -55,7 +55,7 @@ func createLogger() (*slog.Logger, *slog.LevelVar) {
 	return logger, logLevel
 }
 
-func main() {
+func Run() {
 	logger, logLevel := createLogger()
 
 	logger.Info("Starting server")

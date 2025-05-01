@@ -2,7 +2,7 @@ This it template that can be used to setup enterprise level application in Go
 
 To generate docs use:
 ```shell
-swag init
+swag init --generalInfo cmd/app/main.go --parseInternal
 ```
 
 Starting Postgres:
