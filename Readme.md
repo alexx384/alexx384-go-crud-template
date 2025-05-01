@@ -32,7 +32,8 @@ go build -trimpath .
    - [ ] Add unit tests
    - [ ] Add integration tests
    - [ ] Add test coverage report
-5. [ ] Infrastructure setup
+5. [ ] Healthcheck route
+6. [ ] Infrastructure setup
    - [ ] Put application in Docker
    - [ ] Create `docker-compose.yaml` file for deployment
    - [ ] Create CI/CD pipeline and push to GitHub repository
@@ -44,6 +45,7 @@ go build -trimpath .
    - [ ] Explore [huma](https://github.com/danielgtaylor/huma) or [humagin](https://pkg.go.dev/github.com/danielgtaylor/huma/v2/adapters/humagin)
 2. [ ] Explore different web frameworks
    - [ ] Explore chi
+3. [ ] Add authentication
 
 # Install migrate tool
 
