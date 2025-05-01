@@ -13,7 +13,6 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file" // To allow file:// path in migration
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
-	slogctx "github.com/veqryn/slog-context"
 	"log/slog"
 	"os"
 )
@@ -38,33 +37,10 @@ func runDbMigration(pool *pgxpool.Pool) error {
 	}
 }
 
-func createLogger() (*slog.Logger, *slog.LevelVar) {
-	// Add a few default environmental attributes that always are included
-	defaultAttrs := []slog.Attr{
-		slog.String("service", "userService"),
-	}
-	logLevel := new(slog.LevelVar)
-	logLevel.Set(slog.LevelInfo)
-	jsonHandler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-		AddSource: true,
-		Level:     logLevel,
-	}).WithAttrs(defaultAttrs)
-	customHandler := slogctx.NewHandler(jsonHandler, nil)
-	logger := slog.New(customHandler)
-	slog.SetDefault(logger)
-	return logger, logLevel
-}
-
-func Run() {
-	logger, logLevel := createLogger()
+func Run(appConfig *config.Config, logLevelVar *slog.LevelVar) error {
+	logger := slog.Default()
 
 	logger.Info("Starting server")
-
-	appConfig, err := config.LoadConfig()
-	if err != nil {
-		logger.Error("Error loading config", slog.String("error", err.Error()))
-		os.Exit(1)
-	}
 
 	appLogLevel, err := appConfig.App.ToSlogLevel()
 	if err != nil {
@@ -74,7 +50,7 @@ func Run() {
 		appLogLevel = slog.LevelInfo
 	}
 	logger.Info("Setting log level", slog.String("level", appLogLevel.String()))
-	logLevel.Set(appLogLevel)
+	logLevelVar.Set(appLogLevel)
 
 	dbPool, err := database.NewPool(appConfig.DB)
 	if err != nil {
@@ -107,9 +83,5 @@ func Run() {
 	app.Use(gin.Recovery())
 	internal.SetupRouter(dbPool, app)
 
-	err = app.Run(":8080")
-	if err != nil {
-		logger.Error("Something went wrong")
-		return
-	}
+	return app.Run(":8080")
 }

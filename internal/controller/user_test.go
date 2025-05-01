@@ -22,25 +22,24 @@ func TestUnitBadRequestGetUsers(t *testing.T) {
 
 	tests := []struct {
 		name         string
-		params       gin.Params
+		url          string
 		errorMessage string
 	}{
-		{"Non integer offset", gin.Params{
-			gin.Param{Key: OFFSET, Value: "one"}},
+		{"Non integer offset GetUsers", "/api/v1/user/?offset=one",
 			"strconv.Atoi: parsing \"one\": invalid syntax"},
-		{"Non integer limit", gin.Params{
-			gin.Param{Key: OFFSET, Value: "1"}, gin.Param{Key: LIMIT, Value: "two"}},
+		{"Non integer limit GetUsers", "/api/v1/user/?offset=1&limit=two",
 			"strconv.Atoi: parsing \"two\": invalid syntax"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			testRecorder := httptest.NewRecorder()
-			context, _ := gin.CreateTestContext(testRecorder)
-			context.Request, _ = http.NewRequest(http.MethodGet, "/", nil)
-			context.Params = tt.params
+			req, _ := http.NewRequest(http.MethodGet, tt.url, nil)
 
+			router := gin.Default()
+			routerGroup := router.Group("/api/v1")
 			controller := NewUserController(nil)
-			controller.GetUsers(context)
+			controller.SetupRoutes(routerGroup)
+			router.ServeHTTP(testRecorder, req)
 
 			assert.Equal(t, http.StatusBadRequest, testRecorder.Code)
 			responseBody := testRecorder.Body.String()
@@ -78,8 +77,4 @@ func TestUnitInternalErrorGetUsers(t *testing.T) {
 	statusMessage := response.HTTPStatusMessage{}
 	assert.NoError(t, json.Unmarshal([]byte(responseBody), &statusMessage))
 	assert.Equal(t, expectedErrorMessage, statusMessage.Message)
-}
-
-func TestIntegrationGetUsers(t *testing.T) {
-	//
 }

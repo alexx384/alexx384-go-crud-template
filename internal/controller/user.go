@@ -39,16 +39,18 @@ func (controller *UserController) SetupRoutes(superRoute *gin.RouterGroup) {
 // @Summary		Gets list of users summary
 // @Description	Gets list of users description
 // @Produce		json
+// @Param		offset	query		int			true	"Offset"
+// @Param		limit	query		int			true	"Limit"
 // @Success		200		{object}	model.UserResponse
 // @Router		/user/ [get]
 func (controller *UserController) GetUsers(context *gin.Context) {
-	offset, err := responseUtil.GetIntParamOrDefault(context, "offset", DefaultOffset)
+	offset, err := responseUtil.GetIntQueryParamOrDefault(context, "offset", DefaultOffset)
 	if err != nil {
 		responseUtil.NewError(context, http.StatusBadRequest, err)
 		return
 	}
 
-	limit, err := responseUtil.GetIntParamOrDefault(context, "limit", DefaultLimit)
+	limit, err := responseUtil.GetIntQueryParamOrDefault(context, "limit", DefaultLimit)
 	if err != nil {
 		responseUtil.NewError(context, http.StatusBadRequest, err)
 		return

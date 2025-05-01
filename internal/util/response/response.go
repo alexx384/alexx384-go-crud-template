@@ -21,14 +21,15 @@ type HTTPStatusMessage struct {
 	Message string `json:"message" example:"status bad request"`
 }
 
-func GetIntParamOrDefault(ctx *gin.Context, paramName string, defaultValue int) (resultVal int, resultErr error) {
-	resultVal = defaultValue
-	if param, exists := ctx.Params.Get(paramName); exists {
+func GetIntQueryParamOrDefault(ctx *gin.Context, paramName string, defaultValue int) (resultVal int, resultErr error) {
+	if param, exists := ctx.GetQuery(paramName); exists {
 		if value, err := strconv.Atoi(param); err != nil {
 			resultErr = err
 		} else {
 			resultVal = value
 		}
+	} else {
+		resultVal = defaultValue
 	}
 	return
 }
