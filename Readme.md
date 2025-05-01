@@ -13,7 +13,12 @@ docker run --name postgres -e POSTGRES_PASSWORD=password -d -p 5432:5432 postgre
 # Build go program
 
 ```shell
-go build -trimpath .
+go build -trimpath crud/cmd/app
+```
+
+# To run all tests
+```shell
+go test ./...
 ```
 
 # Required items:

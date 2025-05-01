@@ -6,6 +6,7 @@ import (
 	"crud/cmd/app/config/database"
 	"crud/internal"
 	"crud/internal/middleware"
+	"crud/internal/repository/db"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -19,8 +20,12 @@ import (
 )
 
 func runDbMigration(pool *pgxpool.Pool) error {
-	db := stdlib.OpenDBFromPool(pool)
-	conn, err := db.Conn(context.Background())
+	migrationDriver, err := db.GetMigrationDriver()
+	if err != nil {
+		return err
+	}
+	sqlDB := stdlib.OpenDBFromPool(pool)
+	conn, err := sqlDB.Conn(context.Background())
 	defer func(conn *sql.Conn) {
 		err := conn.Close()
 		if err != nil {
@@ -31,9 +36,7 @@ func runDbMigration(pool *pgxpool.Pool) error {
 	if err != nil {
 		return err
 	}
-	m, err := migrate.NewWithDatabaseInstance(
-		"file://internal/repository/db/migrations",
-		"postgres", driver)
+	m, err := migrate.NewWithInstance("iofs", migrationDriver, "postgres", driver)
 	if err != nil {
 		return err
 	}
