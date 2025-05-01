@@ -1,9 +1,9 @@
 package server
 
 import (
+	"crud/cmd/app/config"
+	"crud/cmd/app/config/database"
 	"crud/internal"
-	"crud/internal/config"
-	"crud/internal/config/database"
 	"crud/internal/middleware"
 	"errors"
 	"fmt"
@@ -88,6 +88,10 @@ func Run() {
 		os.Exit(1)
 	}
 
+	if appConfig.App.IsAppInReleaseMode() {
+		logger.Info("Running app in release mode")
+		gin.SetMode(gin.ReleaseMode)
+	}
 	gin.DebugPrintFunc = func(format string, v ...interface{}) {
 		logger.Warn(fmt.Sprintf(format, v...))
 	}

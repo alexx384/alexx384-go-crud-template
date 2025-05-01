@@ -2,7 +2,7 @@ package database
 
 import (
 	"context"
-	"crud/internal/config"
+	"crud/cmd/app/config"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"log/slog"

@@ -24,6 +24,7 @@ type DatabaseConfig struct {
 
 type AppConfig struct {
 	LogLevel string
+	AppMode  string
 }
 
 func (config *DatabaseConfig) ToConnectionString() string {
@@ -44,6 +45,10 @@ func (config *AppConfig) ToSlogLevel() (slog.Level, error) {
 	} else {
 		return slog.LevelInfo, fmt.Errorf("invalid level: %s. Please use one of: debug, info, warn, error", level)
 	}
+}
+
+func (config *AppConfig) IsAppInReleaseMode() bool {
+	return strings.ToLower(config.AppMode) == "release"
 }
 
 func GetEnv(key string, required bool, missedEnvs *[]string) string {
@@ -67,6 +72,7 @@ func LoadConfig() (*Config, error) {
 		},
 		App: AppConfig{
 			LogLevel: GetEnv("LOG_LEVEL", false, &missedEnvs),
+			AppMode:  GetEnv("APP_MODE", false, &missedEnvs),
 		},
 	}
 	var err error
