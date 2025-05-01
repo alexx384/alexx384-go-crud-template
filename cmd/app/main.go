@@ -5,7 +5,6 @@ import (
 	"crud/cmd/app/config/log"
 	"crud/cmd/app/server"
 	"log/slog"
-	"os"
 )
 
 func main() {
@@ -14,12 +13,18 @@ func main() {
 	appConfig, err := config.LoadConfig()
 	if err != nil {
 		logger.Error("Error loading config", slog.String("error", err.Error()))
-		os.Exit(1)
+		return
 	}
 
-	err = server.Run(appConfig, logLevel)
+	engine, dbPool, err := server.ConfigureAppEngine(appConfig, logLevel)
 	if err != nil {
-		logger.Error("Something went wrong")
+		logger.Error("Unable to configure app engine", slog.String("error", err.Error()))
 		return
+	}
+	defer dbPool.Close()
+
+	err = engine.Run(":8080")
+	if err != nil {
+		logger.Error("Error starting server", slog.String("error", err.Error()))
 	}
 }

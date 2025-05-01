@@ -14,7 +14,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
 	"log/slog"
-	"os"
 )
 
 func runDbMigration(pool *pgxpool.Pool) error {
@@ -29,7 +28,19 @@ func runDbMigration(pool *pgxpool.Pool) error {
 	if err != nil {
 		return err
 	}
+	defer func(m *migrate.Migrate) {
+		sourceErr, databaseError := m.Close()
+		if sourceErr != nil {
+			slog.Default().Warn("Source error during migration:", slog.String("error", sourceErr.Error()))
+		}
+		if databaseError != nil {
+			slog.Default().Warn("Database error during migration:", slog.String("error", databaseError.Error()))
+		}
+	}(m)
 	err = m.Up()
+	if err != nil && !errors.Is(err, migrate.ErrNoChange) {
+		return err
+	}
 	if errors.Is(err, migrate.ErrNoChange) {
 		return nil
 	} else {
@@ -37,7 +48,7 @@ func runDbMigration(pool *pgxpool.Pool) error {
 	}
 }
 
-func Run(appConfig *config.Config, logLevelVar *slog.LevelVar) error {
+func ConfigureAppEngine(appConfig *config.Config, logLevelVar *slog.LevelVar) (*gin.Engine, *pgxpool.Pool, error) {
 	logger := slog.Default()
 
 	logger.Info("Starting server")
@@ -49,19 +60,20 @@ func Run(appConfig *config.Config, logLevelVar *slog.LevelVar) error {
 			slog.String("defaultLogLevel", slog.LevelInfo.String()))
 		appLogLevel = slog.LevelInfo
 	}
+	//goland:noinspection GoDfaNilDereference
 	logger.Info("Setting log level", slog.String("level", appLogLevel.String()))
 	logLevelVar.Set(appLogLevel)
 
 	dbPool, err := database.NewPool(appConfig.DB)
 	if err != nil {
 		logger.Error("Error connecting to database", slog.String("error", err.Error()))
-		os.Exit(1)
+		return nil, nil, err
 	}
-	defer dbPool.Close()
 
 	if err = runDbMigration(dbPool); err != nil {
+		dbPool.Close()
 		logger.Error("Error running migration", slog.String("error", err.Error()))
-		os.Exit(1)
+		return nil, nil, err
 	}
 
 	if appConfig.App.IsAppInReleaseMode() {
@@ -83,5 +95,5 @@ func Run(appConfig *config.Config, logLevelVar *slog.LevelVar) error {
 	app.Use(gin.Recovery())
 	internal.SetupRouter(dbPool, app)
 
-	return app.Run(":8080")
+	return app, dbPool, nil
 }

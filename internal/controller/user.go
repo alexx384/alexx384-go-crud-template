@@ -39,8 +39,8 @@ func (controller *UserController) SetupRoutes(superRoute *gin.RouterGroup) {
 // @Summary		Gets list of users summary
 // @Description	Gets list of users description
 // @Produce		json
-// @Param		offset	query		int			true	"Offset"
-// @Param		limit	query		int			true	"Limit"
+// @Param		offset	query		int			false	"Offset"
+// @Param		limit	query		int			false	"Limit"
 // @Success		200		{object}	model.UserResponse
 // @Router		/user/ [get]
 func (controller *UserController) GetUsers(context *gin.Context) {
