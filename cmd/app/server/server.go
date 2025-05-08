@@ -14,9 +14,11 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file" // To allow file:// path in migration
+	"github.com/hellofresh/health-go/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
 	"log/slog"
+	"time"
 )
 
 func runDbMigration(pool *pgxpool.Pool) error {
@@ -49,6 +51,31 @@ func runDbMigration(pool *pgxpool.Pool) error {
 	} else {
 		return err
 	}
+}
+
+func setupHealthCheck(app *gin.Engine, pool *pgxpool.Pool) error {
+	healthcheck, err := health.New(health.WithSystemInfo(), health.WithComponent(health.Component{
+		Name:    "crud",
+		Version: "v1.0.0",
+	}))
+	if err != nil {
+		return err
+	}
+	err = healthcheck.Register(health.Config{
+		Name:      "database",
+		Timeout:   time.Second * 2,
+		SkipOnErr: false,
+		Check: func(ctx context.Context) error {
+			return pool.Ping(ctx)
+		},
+	})
+	if err != nil {
+		return err
+	}
+	app.GET("/status", func(c *gin.Context) {
+		healthcheck.HandlerFunc(c.Writer, c.Request)
+	})
+	return nil
 }
 
 func ConfigureAppEngine(appConfig *config.Config, logLevelVar *slog.LevelVar) (*gin.Engine, *pgxpool.Pool, error) {
@@ -94,9 +121,12 @@ func ConfigureAppEngine(appConfig *config.Config, logLevelVar *slog.LevelVar) (*
 			slog.Int("handlers", nuHandlers))
 	}
 	app := gin.New()
+	if err = setupHealthCheck(app, dbPool); err != nil {
+		logger.Error("Error setting up health check", slog.String("error", err.Error()))
+		return nil, nil, err
+	}
 	app.Use(middleware.JSONLogMiddleware())
 	app.Use(gin.Recovery())
 	internal.SetupRouter(dbPool, app)
-
 	return app, dbPool, nil
 }

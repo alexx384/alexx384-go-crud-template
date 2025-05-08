@@ -21,6 +21,21 @@ go build -trimpath crud/cmd/app
 go test ./...
 ```
 
+# Test coverage
+```shell
+go test ./... -coverprofile cover.out
+```
+
+## Generate percentage report
+```shell
+go tool cover -func cover.out
+```
+
+## Generate HTML report
+```shell
+go tool cover -html cover.out -o coverage.html
+```
+
 # Required items:
 1. [X] Create endpoint to handle simple CRUD requests
    - [X] Choose the right framework to implement (Used `gin`, although `chia` also can be used)
@@ -33,11 +48,11 @@ go test ./...
    - [X] Add database migration
 3. [X] Setup logging
    - [X] Use slog to implement it (we need to supply module name, timestamp, severity, message)
-4. [ ] Test it automatically
-   - [ ] Add unit tests
-   - [ ] Add integration tests
-   - [ ] Add test coverage report
-5. [ ] Healthcheck route
+4. [X] Test it automatically
+   - [X] Add unit tests
+   - [X] Add integration tests
+   - [X] Add test coverage report
+5. [X] Healthcheck route
 6. [ ] Infrastructure setup
    - [ ] Put application in Docker
    - [ ] Create `docker-compose.yaml` file for deployment
